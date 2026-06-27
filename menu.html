@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asiller Kebap — Menü</title>
+<style>
+  :root{
+    --kor:#141210;
+    --kor2:#1e1a17;
+    --kor3:#252018;
+    --alev:#E8521E;
+    --alev-koyu:#C44218;
+    --alev-parlak:#FF6B35;
+    --bakir:#C4823A;
+    --krem:#F5EDE0;
+    --krem-soluk:#C8B99A;
+    --basari:#4E8B44;
+    --bekleme:#D4A832;
+    --mor:#8B5CF6;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;
+    background:var(--kor);
+    color:var(--krem);
+    min-height:100vh;
+  }
+  .font-display{
+    font-family:Georgia,'Times New Roman',serif;
+    letter-spacing:0.01em;
+  }
+
+  /* --- MOD SEÇİCİ --- */
+  .demo-bar{
+    background:#0A0908;
+    border-bottom:1px solid #2a2218;
+    padding:10px 16px;
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    font-size:13px;
+  }
+  .demo-bar span{color:#6a6055; margin-right:4px; font-size:12px; letter-spacing:0.05em;}
+  .demo-btn{
+    background:rgba(255,255,255,.04);
+    border:1px solid #3a3228;
+    color:var(--krem-soluk);
+    padding:6px 14px; border-radius:20px; cursor:pointer; font-size:13px;
+    transition:.2s;
+  }
+  .demo-btn:hover{border-color:var(--alev); color:var(--krem);}
+  .demo-btn.active{
+    background:linear-gradient(135deg,var(--alev),var(--alev-koyu));
+    border-color:transparent; color:#fff;
+    box-shadow:0 2px 12px rgba(232,82,30,.4);
+  }
+
+  .screen{display:none; min-height:calc(100vh - 46px);}
+  .screen.active{display:block;}
+
+  /* ============ MÜŞTERİ MENÜSÜ ============ */
+  .phone-wrap{
+    max-width:430px;
+    margin:0 auto;
+    min-height:calc(100vh - 46px);
+    background:var(--kor);
+    position:relative;
+    display:flex; flex-direction:column;
+  }
+
+  /* HEADER — degrade + ızgara desen */
+  .menu-header{
+    padding:30px 20px 22px;
+    background:linear-gradient(160deg, #2a1e14 0%, #1a1208 60%, var(--kor) 100%);
+    border-bottom:1px solid rgba(196,130,58,.2);
+    position:relative;
+    overflow:hidden;
+  }
+  .menu-header::before{
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(196,130,58,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(196,130,58,.06) 1px, transparent 1px);
+    background-size:28px 28px;
+    pointer-events:none;
+  }
+  .menu-header::after{
+    content:'';
+    position:absolute;
+    top:-60px; right:-40px;
+    width:180px; height:180px;
+    background:radial-gradient(circle, rgba(232,82,30,.18) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .table-tag{
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(232,82,30,.15);
+    border:1px solid rgba(232,82,30,.4);
+    color:var(--alev-parlak);
+    font-size:11px; font-weight:700;
+    padding:4px 10px; border-radius:20px;
+    margin-bottom:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .table-tag::before{
+    content:'◉'; font-size:8px;
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;} 50%{opacity:.3;}
+  }
+  .menu-header h1{
+    font-size:30px; font-weight:700;
+    color:var(--krem);
+    font-family:Georgia,serif;
+    line-height:1.1;
+    position:relative;
+    text-shadow:0 2px 20px rgba(0,0,0,.5);
+  }
+  .header-sub{
+    display:flex; align-items:center; gap:8px;
+    margin-top:6px;
+  }
+  .header-sub p{
+    font-size:12.5px; color:var(--krem-soluk); opacity:.8;
+  }
+  .header-badge{
+    font-size:10px; color:var(--bakir);
+    background:rgba(196,130,58,.1);
+    border:1px solid rgba(196,130,58,.2);
+    padding:2px 8px; border-radius:10px;
+    font-weight:600; letter-spacing:0.05em;
+  }
+
+  /* KATEGORİ SEKMELERİ */
+  .cat-tabs-wrap{
+    position:sticky; top:0;
+    z-index:6;
+    background:var(--kor);
+    border-bottom:1px solid rgba(255,255,255,.05);
+    box-shadow:0 4px 20px rgba(0,0,0,.4);
+  }
+  .cat-tabs{
+    display:flex; gap:8px; overflow-x:auto;
+    padding:12px 16px 10px;
+    scrollbar-width:none;
+  }
+  .cat-tabs-fade{
+    position:absolute; top:0; right:0; bottom:10px; width:40px;
+    background:linear-gradient(to right,transparent,var(--kor));
+    pointer-events:none;
+  }
+  .cat-tabs::-webkit-scrollbar{display:none;}
+  .cat-tab{
+    white-space:nowrap; flex-shrink:0;
+    padding:7px 16px; border-radius:20px;
+    border:1px solid rgba(255,255,255,.08);
+    color:var(--krem-soluk); font-size:12.5px; font-weight:500;
+    cursor:pointer; background:rgba(255,255,255,.03);
+    transition:.2s;
+  }
+  .cat-tab:hover{border-color:rgba(232,82,30,.4); color:var(--krem);}
+  .cat-tab.active{
+    background:linear-gradient(135deg,var(--alev),var(--alev-koyu));
+    border-color:transparent; color:#fff; font-weight:700;
+    box-shadow:0 2px 12px rgba(232,82,30,.35);
+  }
+
+  /* MENÜ GÖVDE */
+  .menu-body{ flex:1; padding:16px 16px 140px; }
+  .cat-title{
+    font-size:12px; color:var(--bakir);
+    text-transform:uppercase; letter-spacing:0.1em;
+    margin:28px 0 12px; font-weight:700;
+    display:flex; align-items:center; gap:10px;
+  }
+  .cat-title::after{
+    content:''; flex:1; height:1px;
+    background:linear-gradient(to right,rgba(196,130,58,.25),transparent);
+  }
+
+  /* ÜRÜN KARTI */
+  .item-card{
+    display:flex; gap:14px;
+    padding:14px;
+    margin-bottom:10px;
+    background:var(--kor2);
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.05);
+    box-shadow:0 2px 12px rgba(0,0,0,.3);
+    transition:.2s;
+    position:relative;
+    overflow:hidden;
+  }
+  .item-card::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+  }
+  .item-emoji{
+    width:72px; height:72px;
+    border-radius:14px;
+    background:linear-gradient(135deg,var(--kor3),#1a130a);
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px; flex-shrink:0;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 4px 12px rgba(0,0,0,.3);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .item-info{flex:1; min-width:0;}
+  .item-info h3{
+    font-size:14.5px; font-weight:600; color:var(--krem);
+    line-height:1.3;
+  }
+  .item-info p{
+    font-size:12px; color:rgba(200,185,154,.5);
+    margin-top:3px; line-height:1.4;
+  }
+  .item-info p:empty{display:none;}
+  .item-meta{
+    display:flex; align-items:center; gap:8px; margin-top:10px;
+  }
+  .item-price{
+    font-size:17px; font-weight:800; color:var(--krem);
+    letter-spacing:-0.01em;
+  }
+  .item-eta{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:11px; color:var(--bekleme);
+    background:rgba(212,168,50,.1);
+    border:1px solid rgba(212,168,50,.2);
+    padding:2px 8px; border-radius:10px; font-weight:600;
+  }
+  .eta-dot{
+    width:4px; height:4px; border-radius:50%;
+    background:var(--bekleme); display:inline-block;
+  }
+  .item-bottom{
+    display:flex; align-items:center; justify-content:flex-end;
+    margin-top:10px;
+  }
+  .qty-ctrl{
+    display:flex; align-items:center; gap:12px;
+    background:rgba(255,255,255,.06);
+    border-radius:10px; padding:4px 8px;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .qty-btn{
+    width:26px; height:26px; border-radius:8px; border:none;
+    background:linear-gradient(135deg,var(--alev),var(--alev-koyu));
+    color:#fff; font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 8px rgba(232,82,30,.3);
+    font-weight:700; line-height:1;
+  }
+  .qty-btn:disabled{background:rgba(255,255,255,.08); box-shadow:none; cursor:default;}
+  .qty-num{font-size:15px; font-weight:700; min-width:18px; text-align:center; color:var(--krem);}
+  .add-btn{
+    font-size:12.5px; padding:7px 18px; border-radius:10px;
+    background:rgba(232,82,30,.1);
+    border:1px solid rgba(232,82,30,.35);
+    color:var(--alev-parlak); cursor:pointer; font-weight:700;
+    transition:.2s;
+  }
+  .add-btn:hover{background:rgba(232,82,30,.2);}
+
+  /* SİPARİŞ ÇUBUĞU */
+  .cart-bar{
+    position:fixed; bottom:0; left:50%;
+    transform:translateX(-50%);
+    width:100%; max-width:430px;
+    background:linear-gradient(135deg,var(--alev),var(--alev-koyu));
+    padding:16px 22px;
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer;
+    box-shadow:0 -4px 30px rgba(232,82,30,.4);
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .cart-bar.hidden{display:none;}
+  .cart-left{display:flex; align-items:center; gap:12px;}
+  .cart-count{
+    background:rgba(255,255,255,.2); backdrop-filter:blur(4px);
+    color:#fff; width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; border:1px solid rgba(255,255,255,.3);
+  }
+  .cart-bar .label{color:#fff; font-weight:700; font-size:15px;}
+  .cart-bar .total{
+    color:#fff; font-weight:800; font-size:17px;
+    text-shadow:0 1px 4px rgba(0,0,0,.2);
+  }
+
+  /* SHEET / OVERLAY */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.7); backdrop-filter:blur(4px);
+    display:none; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .sheet{
+    width:100%; max-width:430px;
+    background:var(--kor2);
+    border-radius:22px 22px 0 0;
+    max-height:88vh;
+    display:flex; flex-direction:column;
+    border-top:1px solid rgba(255,255,255,.08);
+    box-shadow:0 -10px 60px rgba(0,0,0,.6);
+  }
+  .sheet::before{
+    content:''; display:block;
+    width:36px; height:4px; border-radius:2px;
+    background:rgba(255,255,255,.15);
+    margin:12px auto 0;
+    flex-shrink:0;
+  }
+  .sheet-head{
+    padding:14px 22px 12px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .sheet-head h2{font-size:18px; font-weight:700; color:var(--krem);}
+  .sheet-close{
+    background:rgba(255,255,255,.08); border:none; color:var(--krem-soluk);
+    width:28px; height:28px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; cursor:pointer;
+  }
+  .sheet-body{ padding:16px 22px; overflow-y:auto; flex:1; }
+  .cart-line{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:14px;
+  }
+  .cart-line .cl-name{color:var(--krem); font-weight:500;}
+  .cart-line .cl-sub{font-size:12px; color:var(--krem-soluk); margin-top:2px;}
+  .cart-line .cl-price{font-weight:700; color:var(--krem); font-size:15px;}
+  .cart-remove{
+    background:none; border:none; color:#a35c4a; font-size:11px;
+    cursor:pointer; margin-left:8px; opacity:.7;
+  }
+  .note-box{
+    width:100%; background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08); border-radius:12px;
+    padding:12px 14px; color:var(--krem); font-size:13.5px;
+    margin-top:14px; resize:none; font-family:inherit;
+  }
+  .note-box::placeholder{color:rgba(200,185,154,.35);}
+  .note-box:focus{outline:none; border-color:rgba(232,82,30,.4);}
+  .total-row{
+    display:flex; justify-content:space-between;
+    padding:16px 0 4px; font-size:17px; font-weight:800;
+    border-top:1px solid rgba(255,255,255,.06); margin-top:10px;
+  }
+  .sheet-foot{ padding:14px 22px 24px; border-top:1px solid rgba(255,255,255,.05); }
+  .pay-btn{
+    width:100%;
+    background:linear-gradient(135deg,var(--alev),var(--alev-koyu));
+    color:#fff; border:none; padding:16px; border-radius:14px;
+    font-size:15.5px; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 20px rgba(232,82,30,.4);
+    letter-spacing:0.01em;
+  }
+  .pay-btn:disabled{background:rgba(255,255,255,.08); box-shadow:none; cursor:default;}
+
+  /* ONAY EKRANI */
+  .confirm-wrap{
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center; padding:40px 24px;
+    background:radial-gradient(ellipse at 50% 30%, rgba(232,82,30,.07) 0%, transparent 60%);
+  }
+  .confirm-badge{
+    width:96px; height:96px; border-radius:50%;
+    background:linear-gradient(135deg,var(--basari),#3a6e32);
+    display:flex; align-items:center; justify-content:center;
+    font-size:42px; color:#fff; margin-bottom:8px;
+    box-shadow:0 8px 30px rgba(78,139,68,.4);
+  }
+  .order-num{
+    font-family:Georgia,serif; font-size:64px; font-weight:700;
+    background:linear-gradient(135deg,var(--alev-parlak),var(--bakir));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+    letter-spacing:0.02em; margin:4px 0;
+    filter:drop-shadow(0 4px 12px rgba(232,82,30,.3));
+  }
+  .order-num-label{
+    font-size:11px; color:var(--krem-soluk); opacity:.6;
+    text-transform:uppercase; letter-spacing:0.12em;
+  }
+  .confirm-wrap h2{font-size:20px; margin:20px 0 6px; color:var(--krem); font-weight:700;}
+  .confirm-wrap p{font-size:14px; color:var(--krem-soluk); line-height:1.6; max-width:300px; opacity:.8;}
+  .eta-badge{
+    margin-top:18px; display:inline-flex; align-items:center; gap:8px;
+    background:rgba(232,82,30,.1);
+    border:1px solid rgba(232,82,30,.3);
+    color:var(--alev-parlak); padding:10px 22px; border-radius:24px;
+    font-size:14px; font-weight:700;
+  }
+  .eta-badge::before{content:'⏱';}
+  .status-track{display:flex; align-items:center; gap:6px; margin-top:32px;}
+  .status-dot{
+    width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.1);
+    border:2px solid rgba(255,255,255,.15);
+  }
+  .status-dot.on{
+    background:var(--alev); border-color:var(--alev);
+    box-shadow:0 0 10px rgba(232,82,30,.5);
+  }
+  .status-line{width:36px; height:2px; background:rgba(255,255,255,.08);}
+  .status-line.on{background:var(--alev);}
+  .status-text{font-size:12.5px; color:var(--krem-soluk); margin-top:10px; opacity:.7;}
+  .back-to-menu{
+    margin-top:32px; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.1); color:var(--krem-soluk);
+    padding:12px 26px; border-radius:12px; font-size:13px; cursor:pointer;
+    font-family:inherit; transition:.2s;
+  }
+  .back-to-menu:hover{background:rgba(255,255,255,.1); color:var(--krem);}
+
+  /* MUTFAK & KASA EKRANI */
+  .kitchen-wrap{
+    padding:24px 24px 60px;
+    background:var(--kor);
+    min-height:calc(100vh - 46px);
+  }
+  .kitchen-head{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    margin-bottom:24px; flex-wrap:wrap; gap:12px;
+  }
+  .kitchen-head h1{
+    font-size:26px; font-weight:700; font-family:Georgia,serif;
+    background:linear-gradient(135deg,var(--krem) 0%,var(--bakir) 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .kitchen-head .sub{font-size:12.5px; color:var(--krem-soluk); margin-top:4px; opacity:.6;}
+  .clock{
+    font-size:22px; font-weight:300; font-variant-numeric:tabular-nums;
+    color:var(--krem-soluk); opacity:.5; font-family:Georgia,serif;
+  }
+
+  .kanban{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  .kcol-head{
+    display:flex; align-items:center; gap:8px;
+    font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em;
+    margin-bottom:14px; padding-bottom:12px; border-bottom:2px solid;
+  }
+  .kcol-head .count{
+    background:rgba(255,255,255,.1); padding:2px 10px;
+    border-radius:10px; font-size:12px;
+  }
+  .kcol.waiting .kcol-head{color:var(--bekleme); border-color:rgba(212,168,50,.4);}
+  .kcol.cooking .kcol-head{color:var(--alev-parlak); border-color:rgba(232,82,30,.4);}
+  .kcol.ready .kcol-head{color:#6BCF5A; border-color:rgba(107,207,90,.4);}
+
+  .kcards{display:flex; flex-direction:column; gap:10px; min-height:60px;}
+  .empty-col{
+    border:1.5px dashed rgba(255,255,255,.08); border-radius:12px;
+    padding:28px 10px; text-align:center;
+    color:rgba(255,255,255,.2); font-size:12.5px;
+  }
+
+  .order-card{
+    background:var(--kor2);
+    border:1px solid rgba(255,255,255,.06);
+    border-left:3px solid var(--bekleme);
+    border-radius:14px; padding:14px 16px;
+    animation:slideIn .3s ease;
+    box-shadow:0 4px 16px rgba(0,0,0,.3);
+    position:relative; overflow:hidden;
+  }
+  .order-card::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+  }
+  .order-card.cooking{border-left-color:var(--alev);}
+  .order-card.ready{border-left-color:#6BCF5A;}
+  .order-card.teslim{border-left-color:#4a4038; opacity:.7;}
+  @keyframes slideIn{
+    from{opacity:0; transform:translateY(-10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .oc-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;}
+  .oc-num{
+    font-family:Georgia,serif; font-size:24px; font-weight:700;
+    color:var(--krem);
+  }
+  .oc-table{
+    font-size:11px; background:rgba(255,255,255,.08); color:var(--krem-soluk);
+    padding:3px 10px; border-radius:20px; font-weight:700; letter-spacing:0.04em;
+  }
+  .oc-time{font-size:11px; color:rgba(255,255,255,.3); margin-bottom:8px;}
+  .oc-pay{
+    display:inline-block; font-size:10.5px; font-weight:700;
+    padding:2px 9px; border-radius:10px; margin-bottom:8px; letter-spacing:0.03em;
+  }
+  .oc-pay.cash{background:rgba(212,168,50,.12); color:var(--bekleme); border:1px solid rgba(212,168,50,.2);}
+  .oc-pay.paid{background:rgba(107,207,90,.1); color:#6BCF5A; border:1px solid rgba(107,207,90,.2);}
+  .oc-items{font-size:12.5px; line-height:1.8; color:rgba(200,185,154,.6); margin-bottom:10px;}
+  .oc-items b{color:var(--krem); font-weight:600;}
+  .oc-item-mins{font-size:10.5px; color:rgba(255,255,255,.2);}
+  .oc-note{
+    font-size:11.5px; color:var(--bekleme); margin-bottom:10px;
+    background:rgba(212,168,50,.07); padding:6px 10px; border-radius:8px;
+    border-left:2px solid rgba(212,168,50,.3);
+  }
+  .oc-toplam{font-size:13px; color:rgba(200,185,154,.6); margin-bottom:10px;}
+  .oc-toplam b{color:var(--krem); font-size:16px; font-weight:800;}
+  .oc-actions{display:flex; gap:8px; margin-top:2px;}
+  .oc-btn{
+    flex:1; padding:9px; border-radius:10px; border:none; cursor:pointer;
+    font-size:12px; font-weight:700; transition:.15s; font-family:inherit;
+  }
+  .oc-btn.start{
+    background:linear-gradient(135deg,var(--alev),var(--alev-koyu));
+    color:#fff; box-shadow:0 2px 10px rgba(232,82,30,.3);
+  }
+  .oc-btn.done{
+    background:linear-gradient(135deg,#4E8B44,#3a6e32);
+    color:#fff; box-shadow:0 2px 10px rgba(78,139,68,.3);
+  }
+  .oc-btn.serve{
+    background:rgba(255,255,255,.08); color:var(--krem);
+    border:1px solid rgba(255,255,255,.12);
+  }
+
+  @media (max-width:860px){.kanban{grid-template-columns:1fr;}}
+
+  /* ALINAN ÖDEMELER TAM EKRAN */
+  .ao-gir-btn{
+    display:inline-flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+    color:var(--krem); padding:14px 32px; border-radius:14px;
+    cursor:pointer; font-size:15px; font-weight:600; font-family:inherit;
+    transition:.2s;
+  }
+  .ao-gir-btn:hover{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2);}
+  .ao-badge-kasa{
+    background:var(--basari); color:#fff;
+    font-size:11px; font-weight:800; padding:2px 8px; border-radius:10px;
+  }
+  .ao-geri-btn{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+    color:var(--krem-soluk); padding:8px 16px; border-radius:10px;
+    cursor:pointer; font-size:13px; font-weight:600; font-family:inherit;
+    transition:.2s; white-space:nowrap;
+  }
+  .ao-geri-btn:hover{background:rgba(255,255,255,.1); color:var(--krem);}
+  .ao-gunluk-toplam-mini{font-size:12px; color:var(--basari); font-weight:700; margin-top:4px;}
+  .ao-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+    gap:14px; margin-bottom:100px;
+  }
+  .ao-card{
+    background:var(--kor2); border:1px solid rgba(255,255,255,.06);
+    border-left:4px solid var(--basari);
+    border-radius:14px; padding:16px 18px;
+  }
+  .ao-card-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;}
+  .ao-num{font-family:Georgia,serif; font-size:22px; font-weight:700; color:var(--krem);}
+  .ao-masa{
+    font-size:11px; font-weight:700; background:rgba(232,82,30,.15);
+    color:var(--alev-parlak); border:1px solid rgba(232,82,30,.3);
+    padding:2px 8px; border-radius:10px; margin-top:4px; display:inline-block;
+  }
+  .ao-meta{text-align:right;}
+  .ao-saat{font-size:12px; color:var(--krem-soluk); opacity:.7;}
+  .ao-urunler{
+    font-size:12.5px; color:rgba(200,185,154,.7); line-height:1.7;
+    margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,.05); padding-bottom:10px;
+  }
+  .ao-urunler b{color:var(--krem);}
+  .ao-tutar-row{display:flex; justify-content:space-between; align-items:center;}
+  .ao-tutar{font-size:18px; font-weight:800; color:var(--basari);}
+  .ao-not{
+    font-size:11.5px; color:var(--bekleme); margin-top:8px;
+    background:rgba(212,168,50,.07); padding:5px 9px; border-radius:7px;
+    border-left:2px solid rgba(212,168,50,.3);
+  }
+  .ao-bos{text-align:center; padding:80px 20px 120px; color:rgba(255,255,255,.2); font-size:15px;}
+  .ao-toplam-bar{
+    position:fixed; bottom:0; left:0; right:0;
+    background:rgba(20,18,16,.95); backdrop-filter:blur(10px);
+    border-top:1px solid rgba(255,255,255,.08);
+    padding:16px 28px;
+    display:flex; justify-content:space-between; align-items:center;
+    z-index:10;
+  }
+  .ao-toplam-bar span:first-child{font-size:14px; color:var(--krem-soluk);}
+  .ao-toplam-rakam{
+    font-size:26px; font-weight:800;
+    background:linear-gradient(135deg,var(--basari),#6BCF5A);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  }
+</style>
+<style>
+  .demo-bar{ display:none; }
+  .screen{ display:none; min-height:100vh; }
+  .screen.active{ display:block; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-musteri">
+  <div class="phone-wrap">
+    <div id="view-menu">
+      <div class="menu-header">
+        <div class="table-tag" id="masaTag">MASA —</div>
+        <h1 class="font-display">Asiller Kebap</h1>
+        <p>Sipariş vermek için ürün seç, siparişe ekle.</p>
+      </div>
+      <div class="cat-tabs-wrap">
+        <div class="cat-tabs" id="catTabs"></div>
+        <div class="cat-tabs-fade"></div>
+      </div>
+      <div class="menu-body" id="menuBody"></div>
+    </div>
+    <div class="cart-bar hidden" id="cartBar" onclick="openCart()">
+      <div class="cart-left">
+        <div class="cart-count" id="cartCount">0</div>
+        <span class="label">Siparişi gör</span>
+      </div>
+      <span class="total" id="cartTotal">0 ₺</span>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="cartOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>Siparişin</h2>
+      <button class="sheet-close" onclick="closeOverlay('cartOverlay')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div id="cartLines"></div>
+      <textarea class="note-box" id="orderNote" rows="2" placeholder="Not ekle (örn. acısız olsun, su soğuk olsun...)"></textarea>
+      <div class="total-row"><span>Toplam</span><span id="cartTotal2">0 ₺</span></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="pay-btn" id="goCheckoutBtn" onclick="confirmOrder()">Siparişi onayla</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-confirm">
+  <div class="phone-wrap">
+    <div class="confirm-wrap">
+      <div class="confirm-badge">✓</div>
+      <div class="order-num-label">Sipariş numaran</div>
+      <div class="order-num" id="confirmOrderNum">—</div>
+      <h2>Siparişin mutfağa düştü</h2>
+      <p>Siparişin alındı. Hazır olduğunda siparişiniz masanıza getirilecektir.</p>
+      <div class="eta-badge" id="confirmEta">Hesaplanıyor...</div>
+      <div class="status-track">
+        <div class="status-dot on"></div><div class="status-line"></div>
+        <div class="status-dot"></div><div class="status-line"></div>
+        <div class="status-dot"></div>
+      </div>
+      <div class="status-text">Mutfak siparişi aldı</div>
+      <button class="back-to-menu" onclick="backToMenu()">Menüyü geri dön / yeni sipariş</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://rbrevmufcztzrfxxkcvv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ';
+
+const urlParams = new URLSearchParams(window.location.search);
+const MASA_NO = parseInt(urlParams.get('masa')) || 1;
+document.getElementById('masaTag').textContent = 'MASA ' + MASA_NO;
+
+const MENU = [
+  {cat:"Çorbalar", items:[
+    {id:"ezogelin", name:"Ezogelin çorba", desc:"", price:175, emoji:"🥣"},
+  ]},
+  {cat:"Kebap çeşitleri", items:[
+    {id:"urfa", name:"Urfa kebap", desc:"150 gr.", price:580, emoji:"🍢"},
+    {id:"acili-kebap", name:"Acılı kebap", desc:"150 gr.", price:580, emoji:"🍢"},
+    {id:"karisik-kebap", name:"Karışık kebap", desc:"410 gr.", price:1240, emoji:"🍢"},
+    {id:"izgara-kofte", name:"Izgara köfte", desc:"200 gr.", price:580, emoji:"🍢"},
+    {id:"etsote", name:"Etsote", desc:"190 gr.", price:680, emoji:"🍖"},
+    {id:"beyti-acik", name:"Beyti (açık)", desc:"230 gr.", price:680, emoji:"🌯"},
+    {id:"sarma-beyti", name:"Sarma beyti", desc:"230 gr.", price:810, emoji:"🌯"},
+    {id:"sarma-beyti-ozel", name:"Sarma beyti (Sivas, Kayseri, Y.fıstık)", desc:"230 gr.", price:840, emoji:"🌯"},
+    {id:"firin-beyti", name:"Fırın beyti", desc:"230 gr.", price:840, emoji:"🌯"},
+    {id:"domatesli-kebap", name:"Domatesli kebap", desc:"200 gr.", price:760, emoji:"🍅"},
+    {id:"fistikli-kebap", name:"Fıstıklı kebap", desc:"210 gr.", price:840, emoji:"🍢"},
+    {id:"hashas-kebap", name:"Haşhaş kebap", desc:"250 gr.", price:860, emoji:"🍢"},
+    {id:"patlican-kebap", name:"Patlıcan kebap", desc:"250 gr.", price:970, emoji:"🍆"},
+    {id:"oruk-kebabi", name:"Oruk kebabı", desc:"200 gr.", price:660, emoji:"🍢"},
+    {id:"talip-usta", name:"Talip usta", desc:"180 gr.", price:1000, emoji:"🍢"},
+    {id:"acili-kuzu-sis", name:"Acılı kuzu şiş", desc:"180 gr.", price:790, emoji:"🍖"},
+    {id:"kuzu-cop-sis", name:"Kuzu çöp şiş", desc:"180 gr.", price:790, emoji:"🍖"},
+    {id:"ciger-sis", name:"Ciğer şiş", desc:"220 gr.", price:720, emoji:"🍖"},
+    {id:"sac-tava", name:"Saç tava", desc:"190 gr.", price:820, emoji:"🍳"},
+    {id:"halep-isi-kebap", name:"Halep işi kebap", desc:"150 gr.", price:770, emoji:"🍢"},
+    {id:"yogurtlu-kebap", name:"Yoğurtlu kebap", desc:"150 gr.", price:770, emoji:"🍢"},
+  ]},
+  {cat:"Spesiyal kebaplar", items:[
+    {id:"asiller-kebap", name:"Asiller kebap", desc:"180 gr.", price:850, emoji:"⭐"},
+    {id:"patlican-ezmeli", name:"Patlıcan ezmeli", desc:"180 gr.", price:850, emoji:"🍆"},
+    {id:"domates-ezmeli", name:"Domates ezmeli", desc:"180 gr.", price:850, emoji:"🍅"},
+    {id:"ali-nazik", name:"Ali Nazik", desc:"180 gr.", price:850, emoji:"⭐"},
+  ]},
+  {cat:"Tavuk ızgaralar", items:[
+    {id:"tavuk-sis", name:"Tavuk şiş", desc:"250 gr.", price:580, emoji:"🍗"},
+    {id:"kanat", name:"Kanat", desc:"380 gr.", price:580, emoji:"🍗"},
+    {id:"tavuk-bonfile-sis", name:"Tavuk bonfile şiş", desc:"230 gr.", price:580, emoji:"🍗"},
+  ]},
+  {cat:"Dürüm çeşitleri", items:[
+    {id:"adana-durum", name:"Adana dürüm", desc:"135 gr.", price:440, emoji:"🌯"},
+    {id:"urfa-durum", name:"Urfa dürüm", desc:"135 gr.", price:440, emoji:"🌯"},
+    {id:"tavuk-sis-durum", name:"Tavuk şiş dürüm", desc:"220 gr.", price:440, emoji:"🌯"},
+    {id:"kuzu-sis-durum", name:"Kuzu şiş dürüm", desc:"160 gr.", price:600, emoji:"🌯"},
+    {id:"cop-sis-durum", name:"Çöp şiş dürüm", desc:"160 gr.", price:600, emoji:"🌯"},
+    {id:"doner-durum", name:"Döner dürüm", desc:"80 gr.", price:440, emoji:"🌯"},
+    {id:"ciger-durum", name:"Ciğer dürüm", desc:"", price:470, emoji:"🌯"},
+  ]},
+  {cat:"Mevsim kebapları", items:[
+    {id:"soganli-kebap", name:"Soğanlı kebap", desc:"200 gr. (Nisan-Mayıs)", price:970, emoji:"🧅"},
+    {id:"sarimsakli-kebap", name:"Sarımsaklı kebap", desc:"200 gr. (Nisan-Mayıs)", price:990, emoji:"🧄"},
+    {id:"kemeli-kebap", name:"Kemeli kebap", desc:"210 gr. (Nisan, Mayıs, Haziran)", price:1320, emoji:"🍢"},
+  ]},
+  {cat:"Pide çeşitleri", items:[
+    {id:"beyaz-peynirli-pide", name:"Beyaz peynirli pide", desc:"", price:440, emoji:"🥙"},
+    {id:"kasarli-pide", name:"Kaşarlı pide (domatesli, biberli)", desc:"", price:440, emoji:"🥙"},
+    {id:"kasarli-pide2", name:"Kaşarlı pide", desc:"", price:440, emoji:"🥙"},
+    {id:"kavurmali-pide", name:"Kavurmalı pide", desc:"", price:570, emoji:"🥙"},
+    {id:"kavurmali-kasarli-pide", name:"Kavurmalı kaşarlı pide", desc:"", price:570, emoji:"🥙"},
+    {id:"kusbasili-pide", name:"Kuşbaşılı pide", desc:"", price:540, emoji:"🥙"},
+    {id:"kusbasili-kasarli-pide", name:"Kuşbaşılı kaşarlı pide", desc:"", price:540, emoji:"🥙"},
+    {id:"karisik-pide", name:"Karışık pide", desc:"", price:540, emoji:"🥙"},
+    {id:"kiymali-pide", name:"Kıymalı pide", desc:"", price:440, emoji:"🥙"},
+    {id:"kasarli-sucuklu-pide", name:"Kaşarlı sucuklu pide", desc:"", price:540, emoji:"🥙"},
+    {id:"kiymali-yumurtali-pide", name:"Kıymalı yumurtalı pide", desc:"", price:440, emoji:"🥙"},
+    {id:"kasarli-yumurtali-pide", name:"Kaşarlı yumurtalı pide", desc:"", price:440, emoji:"🥙"},
+  ]},
+  {cat:"Döner çeşitleri", items:[
+    {id:"y-ekmek-arasi", name:"Y. ekmek arası döner", desc:"50 gr. pişmiş", price:330, emoji:"🥙"},
+    {id:"sandvic-doner", name:"Sandviç döner", desc:"50 gr. pişmiş", price:330, emoji:"🥙"},
+    {id:"doner", name:"Döner (porsiyon)", desc:"100 gr. pişmiş", price:580, emoji:"🍖"},
+    {id:"pilav-ustu-doner", name:"Pilav üstü döner", desc:"100 gr. pişmiş", price:650, emoji:"🍛"},
+    {id:"iskender", name:"İskender", desc:"100 gr. pişmiş", price:770, emoji:"🍛"},
+    {id:"eti-bol-iskender", name:"Eti bol İskender", desc:"130 gr. pişmiş", price:960, emoji:"🍛"},
+  ]},
+  {cat:"Lahmacun çeşitleri", items:[
+    {id:"lahmacun", name:"Lahmacun", desc:"150 gr. sebzeli", price:175, emoji:"🫓"},
+    {id:"urfa-isi-tekli-lahmacun", name:"Urfa işi tekli lahmacun", desc:"225 gr. sebzeli", price:260, emoji:"🫓"},
+    {id:"ceviz-lahmacun", name:"Ceviz lahmacun", desc:"75 gr. sebzeli", price:125, emoji:"🫓"},
+    {id:"antep-isi-lahmacun", name:"Antep işi lahmacun", desc:"160 gr. sebzeli", price:190, emoji:"🫓"},
+    {id:"cullama-lahmacun", name:"Çullama lahmacun", desc:"225 gr. sebzeli", price:220, emoji:"🫓"},
+    {id:"ev-isi-lahmacun", name:"Ev işi lahmacun", desc:"150 gr. sebzeli", price:260, emoji:"🫓"},
+  ]},
+  {cat:"Spesiyaller", items:[
+    {id:"icli-kofte", name:"İçli köfte", desc:"", price:175, emoji:"🧆"},
+    {id:"cig-kofte", name:"Çiğ köfte", desc:"", price:320, emoji:"🧆"},
+    {id:"bulgur-pilavi", name:"Bulgur pilavı", desc:"", price:150, emoji:"🍚"},
+    {id:"piring-pilavi", name:"Pirinç pilavı", desc:"", price:150, emoji:"🍚"},
+    {id:"patates-tava", name:"Patates tava", desc:"", price:260, emoji:"🍟"},
+  ]},
+  {cat:"Salatalar", items:[
+    {id:"coban-salata", name:"Çoban salata", desc:"", price:250, emoji:"🥗"},
+    {id:"gobek-salata", name:"Göbek salata", desc:"", price:250, emoji:"🥗"},
+    {id:"yesil-salata", name:"Yeşil salata", desc:"", price:250, emoji:"🥗"},
+    {id:"karisik-salata", name:"Karışık salata", desc:"", price:250, emoji:"🥗"},
+    {id:"kasik-salata", name:"Kaşık salata", desc:"", price:250, emoji:"🥗"},
+    {id:"g-dagi-salata", name:"G. Dağı salata", desc:"", price:380, emoji:"🥗"},
+  ]},
+  {cat:"Tatlı çeşitleri", items:[
+    {id:"kadayif", name:"Kadayıf", desc:"", price:290, emoji:"🍯"},
+    {id:"kunefe", name:"Künefe", desc:"", price:310, emoji:"🧀"},
+    {id:"kunefe-fistikli", name:"Künefe fıstıklı", desc:"", price:330, emoji:"🧀"},
+    {id:"kunefe-kaymakli", name:"Künefe kaymaklı", desc:"", price:330, emoji:"🧀"},
+    {id:"sutlac", name:"Sütlaç", desc:"", price:240, emoji:"🍮"},
+  ]},
+  {cat:"İçecekler", items:[
+    {id:"acik-ayran", name:"Açık ayran", desc:"300 ml.", price:90, emoji:"🥛"},
+    {id:"kutu-ayran", name:"Kutu ayran", desc:"300 ml.", price:80, emoji:"🥛"},
+    {id:"kola", name:"Kola", desc:"330 ml.", price:90, emoji:"🥤"},
+    {id:"fanta", name:"Fanta", desc:"330 ml.", price:90, emoji:"🥤"},
+    {id:"diet-kola", name:"Diet kola", desc:"330 ml.", price:90, emoji:"🥤"},
+    {id:"zero", name:"Zero", desc:"330 ml.", price:90, emoji:"🥤"},
+    {id:"sprite", name:"Sprite", desc:"330 ml.", price:90, emoji:"🥤"},
+    {id:"salgam", name:"Şalgam", desc:"330 ml.", price:90, emoji:"🥤"},
+    {id:"soda", name:"Soda", desc:"200 ml.", price:60, emoji:"🥤"},
+    {id:"su", name:"Su", desc:"330 ml.", price:40, emoji:"💧"},
+  ]},
+];
+const CAT_DEFAULT_MINS = {
+  "Çorbalar": 8,
+  "Kebap çeşitleri": 22,
+  "Spesiyal kebaplar": 25,
+  "Tavuk ızgaralar": 20,
+  "Dürüm çeşitleri": 14,
+  "Mevsim kebapları": 25,
+  "Pide çeşitleri": 18,
+  "Döner çeşitleri": 10,
+  "Lahmacun çeşitleri": 15,
+  "Spesiyaller": 16,
+  "Salatalar": 7,
+  "Tatlı çeşitleri": 6,
+  "İçecekler": 2,
+};
+const ITEM_MINS_OVERRIDE = {
+  "karisik-kebap": 28,
+  "sac-tava": 24,
+  "talip-usta": 26,
+  "iskender": 16,
+  "eti-bol-iskender": 18,
+  "pilav-ustu-doner": 13,
+  "cig-kofte": 12,
+  "kunefe": 14,
+  "kunefe-fistikli": 14,
+  "kunefe-kaymakli": 14,
+};
+
+function itemMins(item, catName){
+  return ITEM_MINS_OVERRIDE[item.id] ?? CAT_DEFAULT_MINS[catName] ?? 15;
+}
+MENU.forEach(group=>{ group.items.forEach(item=>{ item.mins = itemMins(item, group.cat); }); });
+
+let cart = {};
+
+async function sbGet(path){
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  return r.json();
+}
+async function sbPost(table, data){
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json', 'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+async function getSiparisNo(){
+  const bugun = new Date().toISOString().split('T')[0];
+  const rows = await sbGet('orders?olusturma_zamani=gte.' + bugun + 'T00:00:00&select=siparis_no&order=olusturma_zamani.desc&limit=1');
+  if(!rows || rows.length === 0) return 'A-01';
+  const num = parseInt(rows[0].siparis_no.split('-')[1]) + 1;
+  return 'A-' + String(num).padStart(2,'0');
+}
+
+function itemCtrlHtml(id){
+  const qty = cart[id] || 0;
+  if(qty === 0){
+    return '<button class="add-btn" onclick="changeQty(\''+id+'\',1)">Ekle</button>';
+  }
+  return '<div class="qty-ctrl">' +
+    '<button class="qty-btn" onclick="changeQty(\''+id+'\',-1)">−</button>' +
+    '<span class="qty-num">'+qty+'</span>' +
+    '<button class="qty-btn" onclick="changeQty(\''+id+'\',1)">+</button>' +
+    '</div>';
+}
+
+function renderItemCtrl(id){
+  const el = document.getElementById('ctrl-'+id);
+  if(!el) return;
+  el.innerHTML = itemCtrlHtml(id);
+}
+
+function scrollToSection(gi){
+  const section = document.getElementById('section-'+gi);
+  const bar = document.querySelector('.cat-tabs-wrap');
+  if(!section) return;
+  const barH = bar ? bar.offsetHeight : 0;
+  window.scrollTo({top: section.getBoundingClientRect().top + window.scrollY - barH - 8, behavior:'smooth'});
+}
+
+function renderMenu(){
+  const tabs = document.getElementById('catTabs');
+  const body = document.getElementById('menuBody');
+  tabs.innerHTML = ''; body.innerHTML = '';
+  MENU.forEach((group, gi)=>{
+    const tab = document.createElement('button');
+    tab.className = 'cat-tab' + (gi===0?' active':'');
+    tab.textContent = group.cat;
+    tab.onclick = ()=>{
+      document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      scrollToSection(gi);
+    };
+    tabs.appendChild(tab);
+
+    const section = document.createElement('div');
+    section.id = 'section-' + gi;
+    const title = document.createElement('div');
+    title.className = 'cat-title';
+    title.textContent = group.cat;
+    section.appendChild(title);
+
+    group.items.forEach(item=>{
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      const ctrl = itemCtrlHtml(item.id);
+      card.innerHTML =
+        '<div class="item-emoji">'+item.emoji+'</div>' +
+        '<div class="item-info">' +
+          '<h3>'+item.name+'</h3>' +
+          '<p>'+item.desc+'</p>' +
+          '<div class="item-meta">' +
+            '<span class="item-price">'+item.price+' ₺</span>' +
+            '<span class="item-eta"><i class="eta-dot"></i>~'+item.mins+' dk</span>' +
+          '</div>' +
+          '<div class="item-bottom">' +
+            '<div id="ctrl-'+item.id+'">'+ctrl+'</div>' +
+          '</div>' +
+        '</div>';
+      section.appendChild(card);
+    });
+    body.appendChild(section);
+  });
+}
+
+function changeQty(id, delta){
+  cart[id] = (cart[id]||0) + delta;
+  if(cart[id]<=0) delete cart[id];
+  renderItemCtrl(id);
+  updateCartBar();
+}
+function findItem(id){
+  for(const g of MENU){ const f=g.items.find(i=>i.id===id); if(f) return f; }
+}
+function cartTotalValue(){ let t=0; for(const id in cart) t+=findItem(id).price*cart[id]; return t; }
+function cartCountValue(){ let c=0; for(const id in cart) c+=cart[id]; return c; }
+
+function updateCartBar(){
+  const bar = document.getElementById('cartBar');
+  const count = cartCountValue();
+  if(count===0){ bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = cartTotalValue()+' ₺';
+}
+
+function openCart(){
+  const lines = document.getElementById('cartLines');
+  lines.innerHTML = '';
+  for(const id in cart){
+    const item = findItem(id);
+    const row = document.createElement('div');
+    row.className = 'cart-line';
+    row.innerHTML =
+      '<div>' +
+        '<div class="cl-name">'+item.name+'</div>' +
+        '<div class="cl-sub">'+cart[id]+' adet × '+item.price+' ₺ ' +
+          '<button class="cart-remove" onclick="removeFromCart(\''+id+'\')">kaldır</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cl-price">'+(item.price*cart[id])+' ₺</div>';
+    lines.appendChild(row);
+  }
+  document.getElementById('cartTotal2').textContent = cartTotalValue()+' ₺';
+  document.getElementById('cartOverlay').classList.add('show');
+}
+function removeFromCart(id){ delete cart[id]; renderItemCtrl(id); updateCartBar(); openCart(); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('show'); }
+
+async function confirmOrder(){
+  if(cartCountValue()===0) return;
+  const btn = document.getElementById('goCheckoutBtn');
+  btn.disabled=true; btn.textContent='Gönderiliyor...';
+  try{
+    const aktif = await sbGet('orders?durum=in.(bekliyor,hazirlaniyor)&select=id');
+    const aktifSayi = aktif ? aktif.length : 0;
+    const siparisNo = await getSiparisNo();
+    const items = Object.keys(cart).map(id=>{ const item=findItem(id); return {name:item.name,qty:cart[id],mins:item.mins,price:item.price}; });
+    const base = Math.max(...items.map(i=>i.mins));
+    const eta = base + aktifSayi * 3;
+    const toplam = cartTotalValue();
+    const note = document.getElementById('orderNote').value.trim();
+    const orders = await sbPost('orders', {siparis_no:siparisNo, masa_no:MASA_NO, durum:'bekliyor', odeme:'bekliyor', toplam:toplam, musteri_notu:note});
+    if(!orders||orders.length===0) throw new Error('Kayıt hatası');
+    const orderId = orders[0].id;
+    for(const id in cart){
+      const item = findItem(id);
+      await sbPost('order_items', {order_id:orderId, urun_adi:item.name, adet:cart[id], birim_fiyat:item.price, hazirlama_dk:item.mins});
+    }
+    document.getElementById('confirmOrderNum').textContent = siparisNo;
+    document.getElementById('confirmEta').textContent = '~'+eta+' dakika içinde hazır';
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-confirm').classList.add('active');
+    cart = {};
+    updateCartBar();
+    renderMenu();
+  } catch(e){
+    alert('Bir hata oluştu, lütfen tekrar deneyin.');
+    console.error(e);
+  } finally{
+    btn.disabled=false; btn.textContent='Siparişi onayla';
+  }
+}
+
+function backToMenu(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-musteri').classList.add('active');
+}
+
+renderMenu();
+</script>
+</body>
+</html>
