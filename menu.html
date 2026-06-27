@@ -889,18 +889,15 @@ function renderMenu(){
       scrollToSection(gi);
     };
     tabs.appendChild(tab);
-
     const section = document.createElement('div');
     section.id = 'section-' + gi;
     const title = document.createElement('div');
     title.className = 'cat-title';
     title.textContent = group.cat;
     section.appendChild(title);
-
     group.items.forEach(item=>{
       const card = document.createElement('div');
       card.className = 'item-card';
-      const ctrl = itemCtrlHtml(item.id);
       card.innerHTML =
         '<div class="item-emoji">'+item.emoji+'</div>' +
         '<div class="item-info">' +
@@ -911,7 +908,7 @@ function renderMenu(){
             '<span class="item-eta"><i class="eta-dot"></i>~'+item.mins+' dk</span>' +
           '</div>' +
           '<div class="item-bottom">' +
-            '<div id="ctrl-'+item.id+'">'+ctrl+'</div>' +
+            '<div id="ctrl-'+item.id+'">'+itemCtrlHtml(item.id)+'</div>' +
           '</div>' +
         '</div>';
       section.appendChild(card);
@@ -935,7 +932,9 @@ function cartCountValue(){ let c=0; for(const id in cart) c+=cart[id]; return c;
 function updateCartBar(){
   const bar = document.getElementById('cartBar');
   const count = cartCountValue();
-  if(count===0){ bar.classList.add('hidden'); return; }
+  // FIX 4: onay ekranındaysa cart bar'ı hiç gösterme
+  const confirmActive = document.getElementById('screen-confirm').classList.contains('active');
+  if(count===0 || confirmActive){ bar.classList.add('hidden'); return; }
   bar.classList.remove('hidden');
   document.getElementById('cartCount').textContent = count;
   document.getElementById('cartTotal').textContent = cartTotalValue()+' ₺';
@@ -969,28 +968,65 @@ async function confirmOrder(){
   const btn = document.getElementById('goCheckoutBtn');
   btn.disabled=true; btn.textContent='Gönderiliyor...';
   try{
+    // Aktif sipariş sayısı (yoğunluk için)
     const aktif = await sbGet('orders?durum=in.(bekliyor,hazirlaniyor)&select=id');
-    const aktifSayi = aktif ? aktif.length : 0;
+    const aktifSayi = aktif && !aktif.error ? aktif.length : 0;
+
     const siparisNo = await getSiparisNo();
-    const items = Object.keys(cart).map(id=>{ const item=findItem(id); return {name:item.name,qty:cart[id],mins:item.mins,price:item.price}; });
-    const base = Math.max(...items.map(i=>i.mins));
-    const eta = base + aktifSayi * 3;
+
+    // FIX 2: items array'ini MENU'den mins değeriyle oluştur
+    const items = Object.keys(cart).map(id=>{
+      const item = findItem(id);
+      return { name: item.name, qty: cart[id], mins: item.mins, price: item.price };
+    });
+
+    // FIX 2: ETA doğru hesaplanıyor
+    const maxMins = Math.max(...items.map(i => i.mins));
+    const eta = maxMins + aktifSayi * 3;
+
     const toplam = cartTotalValue();
     const note = document.getElementById('orderNote').value.trim();
-    const orders = await sbPost('orders', {siparis_no:siparisNo, masa_no:MASA_NO, durum:'bekliyor', odeme:'bekliyor', toplam:toplam, musteri_notu:note});
-    if(!orders||orders.length===0) throw new Error('Kayıt hatası');
+
+    // Siparişi kaydet
+    const orders = await sbPost('orders', {
+      siparis_no: siparisNo,
+      masa_no: MASA_NO,
+      durum: 'bekliyor',
+      odeme: 'bekliyor',
+      toplam: toplam,
+      musteri_notu: note
+    });
+    if(!orders || orders.error || orders.length===0) throw new Error('Kayıt hatası');
     const orderId = orders[0].id;
+
+    // Kalemleri kaydet
     for(const id in cart){
       const item = findItem(id);
-      await sbPost('order_items', {order_id:orderId, urun_adi:item.name, adet:cart[id], birim_fiyat:item.price, hazirlama_dk:item.mins});
+      await sbPost('order_items', {
+        order_id: orderId,
+        urun_adi: item.name,
+        adet: cart[id],
+        birim_fiyat: item.price,
+        hazirlama_dk: item.mins
+      });
     }
+
+    // Onay ekranı
     document.getElementById('confirmOrderNum').textContent = siparisNo;
     document.getElementById('confirmEta').textContent = '~'+eta+' dakika içinde hazır';
+
+    // FIX 4: Önce cart bar'ı gizle
+    document.getElementById('cartBar').classList.add('hidden');
+
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-confirm').classList.add('active');
+    window.scrollTo({top:0, behavior:'smooth'});
+
+    // FIX 3: Sepeti ve notu temizle
     cart = {};
-    updateCartBar();
+    document.getElementById('orderNote').value = '';
     renderMenu();
+
   } catch(e){
     alert('Bir hata oluştu, lütfen tekrar deneyin.');
     console.error(e);
@@ -1002,6 +1038,7 @@ async function confirmOrder(){
 function backToMenu(){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-musteri').classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 renderMenu();

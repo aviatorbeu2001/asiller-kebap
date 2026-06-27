@@ -604,7 +604,7 @@
     </div>
     <div style="text-align:right;">
       <div class="clock" id="clock"></div>
-      <div id="baglanti" style="font-size:11px;margin-top:4px;color:#5C7A4F;">● Bağlı</div>
+      <div id="baglanti" style="font-size:11px;margin-top:4px;color:#5C7A4F;">● Bağlanıyor...</div>
     </div>
   </div>
   <div class="kanban">
@@ -622,7 +622,6 @@
     </div>
   </div>
 </div>
-
 <script>
 const SUPABASE_URL = 'https://rbrevmufcztzrfxxkcvv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ';
@@ -633,27 +632,41 @@ async function sbGet(path){
   });
   return r.json();
 }
-async function sbPatch(table, id, data){
-  await fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id, {
+async function sbPatch(id, data){
+  await fetch(SUPABASE_URL+'/rest/v1/orders?id=eq.'+id, {
     method:'PATCH',
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
     body:JSON.stringify(data)
   });
 }
 
-function fmtTime(d){
-  return new Date(d).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
-}
+function fmtTime(d){ return new Date(d).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
 function minutesAgo(d){
   const m=Math.floor((Date.now()-new Date(d).getTime())/60000);
   return m<1?'az önce':m+' dk önce';
 }
 
 let orders = [];
+let lastCount = -1;
 
 async function loadOrders(){
-  const rows = await sbGet('orders?durum=in.(bekliyor,hazirlaniyor,hazir)&select=*,order_items(*)&order=olusturma_zamani.asc');
-  if(rows && !rows.error){ orders = rows; renderKitchen(); }
+  try{
+    const rows = await sbGet('orders?durum=in.(bekliyor,hazirlaniyor,hazir)&select=*,order_items(*)&order=olusturma_zamani.asc');
+    if(rows && !rows.error){
+      // Yeni sipariş geldiyse sesi çal
+      if(lastCount >= 0 && rows.length > lastCount){
+        try{ new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA...').play(); }catch(e){}
+      }
+      lastCount = rows.length;
+      orders = rows;
+      renderKitchen();
+      document.getElementById('baglanti').textContent = '● Bağlı';
+      document.getElementById('baglanti').style.color = '#5C7A4F';
+    }
+  } catch(e){
+    document.getElementById('baglanti').textContent = '● Bağlantı sorunu';
+    document.getElementById('baglanti').style.color = '#A33A2D';
+  }
 }
 
 function renderKitchen(){
@@ -673,43 +686,68 @@ function fillCol(elId, list, status){
   if(list.length===0){ el.innerHTML='<div class="empty-col">Sipariş yok</div>'; return; }
   el.innerHTML = list.map(o=>{
     const items = (o.order_items||[]).map(i=>'<b>'+i.adet+'×</b> '+i.urun_adi+' <span class="oc-item-mins">~'+i.hazirlama_dk+' dk</span>').join('<br>');
-    const eta = o.eta_dk ? '· tahmini ~'+o.eta_dk+' dk' : '';
     let actions = '';
-    if(status==='waiting') actions='<button class="oc-btn start" onclick="advance(''+o.id+'','hazirlaniyor')">Hazırlamaya başla</button>';
-    else if(status==='cooking') actions='<button class="oc-btn done" onclick="advance(''+o.id+'','hazir')">Hazır, garson alsın</button>';
-    else actions='<button class="oc-btn serve" onclick="advance(''+o.id+'','teslim')">Garson masaya götürdü</button>';
-    return '<div class="order-card '+status+'"><div class="oc-top"><span class="oc-num">'+o.siparis_no+'</span><span class="oc-table">Masa '+o.masa_no+'</span></div><div class="oc-time">'+fmtTime(o.olusturma_zamani)+' · '+minutesAgo(o.olusturma_zamani)+' '+eta+'</div><div class="oc-items">'+items+'</div>'+(o.musteri_notu?'<div class="oc-note">Not: '+o.musteri_notu+'</div>':'')+'<div class="oc-actions">'+actions+'</div></div>';
+    if(status==='waiting') actions='<button class="oc-btn start" onclick="advance(\''+o.id+'\',\'hazirlaniyor\')">Hazırlamaya başla</button>';
+    else if(status==='cooking') actions='<button class="oc-btn done" onclick="advance(\''+o.id+'\',\'hazir\')">Hazır, garson alsın</button>';
+    else actions='<button class="oc-btn serve" onclick="advance(\''+o.id+'\',\'teslim\')">Garson masaya götürdü</button>';
+    return '<div class="order-card '+status+'">'+
+      '<div class="oc-top"><span class="oc-num">'+o.siparis_no+'</span><span class="oc-table">Masa '+o.masa_no+'</span></div>'+
+      '<div class="oc-time">'+fmtTime(o.olusturma_zamani)+' · '+minutesAgo(o.olusturma_zamani)+'</div>'+
+      '<div class="oc-items">'+items+'</div>'+
+      (o.musteri_notu?'<div class="oc-note">Not: '+o.musteri_notu+'</div>':'')+
+      '<div class="oc-actions">'+actions+'</div>'+
+      '</div>';
   }).join('');
 }
 
 async function advance(id, yeniDurum){
-  await sbPatch('orders', id, {durum: yeniDurum});
+  await sbPatch(id, {durum: yeniDurum});
   await loadOrders();
 }
 
-// Gerçek zamanlı dinleme (Supabase Realtime)
+// Realtime - Supabase yeni format
 function baglanRealtime(){
-  const ws = new WebSocket('wss://rbrevmufcztzrfxxkcvv.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ&vsn=1.0.0');
-  ws.onopen = ()=>{
-    ws.send(JSON.stringify({topic:'realtime:public:orders',event:'phx_join',payload:{},ref:'1'}));
-    document.getElementById('baglanti').textContent = '● Bağlı';
-    document.getElementById('baglanti').style.color = '#5C7A4F';
-  };
-  ws.onmessage = (e)=>{
-    const msg = JSON.parse(e.data);
-    if(msg.event==='INSERT'||msg.event==='UPDATE'||msg.event==='DELETE'){ loadOrders(); }
-  };
-  ws.onclose = ()=>{
-    document.getElementById('baglanti').textContent = '● Bağlantı kesildi, yeniden bağlanıyor...';
-    document.getElementById('baglanti').style.color = '#A33A2D';
-    setTimeout(baglanRealtime, 3000);
-  };
+  try{
+    const ws = new WebSocket(
+      'wss://rbrevmufcztzrfxxkcvv.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ&vsn=1.0.0'
+    );
+    ws.onopen = ()=>{
+      ws.send(JSON.stringify({
+        topic: 'realtime:public:orders',
+        event: 'phx_join',
+        payload: { config: { broadcast: { self: false }, presence: { key: '' } } },
+        ref: '1'
+      }));
+    };
+    ws.onmessage = (e)=>{
+      try{
+        const msg = JSON.parse(e.data);
+        if(msg.event==='phx_reply' && msg.payload && msg.payload.status==='ok'){
+          document.getElementById('baglanti').textContent = '● Canlı bağlı';
+          document.getElementById('baglanti').style.color = '#5C7A4F';
+        }
+        if(['INSERT','UPDATE','DELETE'].includes(msg.event)){ loadOrders(); }
+        // Yeni format
+        if(msg.event==='postgres_changes'){ loadOrders(); }
+      }catch(e){}
+    };
+    ws.onclose = ()=>{
+      document.getElementById('baglanti').textContent = '● Yeniden bağlanıyor...';
+      document.getElementById('baglanti').style.color = '#C99A3E';
+      setTimeout(baglanRealtime, 3000);
+    };
+    ws.onerror = ()=>{ ws.close(); };
+    // Heartbeat - bağlantı kopmasm diye
+    setInterval(()=>{ if(ws.readyState===1) ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'})); }, 20000);
+  } catch(e){ setTimeout(baglanRealtime, 5000); }
 }
 
+// Saat
 setInterval(()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString('tr-TR'); },1000);
-document.getElementById('clock').textContent=new Date().toLocaleTimeString('tr-TR');
-setInterval(loadOrders, 10000); // 10 saniyede bir yenile (yedek)
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR');
 
+// 5 saniyede bir yenile (realtime yedek olarak)
+setInterval(loadOrders, 5000);
 loadOrders();
 baglanRealtime();
 </script>
