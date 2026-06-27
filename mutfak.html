@@ -596,16 +596,14 @@
 </style>
 </head>
 <body>
+
 <div class="kitchen-wrap">
   <div class="kitchen-head">
     <div>
-      <h1 class="font-display">Mutfak ekranı</h1>
+      <h1 class="font-display">Mutfak ekranı <span style="font-size:11px;color:#a89880;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;">Test aşamasındadır</span></h1>
       <div class="sub">Asiller Kebap — canlı sipariş akışı</div>
     </div>
-    <div style="text-align:right;">
-      <div class="clock" id="clock"></div>
-      <div id="baglanti" style="font-size:11px;margin-top:4px;color:#5C7A4F;">● Bağlanıyor...</div>
-    </div>
+    <div class="clock" id="clock"></div>
   </div>
   <div class="kanban">
     <div class="kcol waiting">
@@ -622,134 +620,68 @@
     </div>
   </div>
 </div>
-<script>
-const SUPABASE_URL = 'https://rbrevmufcztzrfxxkcvv.supabase.co';
+
+<script>const SUPABASE_URL = 'https://rbrevmufcztzrfxxkcvv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ';
 
 async function sbGet(path){
-  const r = await fetch(SUPABASE_URL+'/rest/v1/'+path, {
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-  });
+  const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
   return r.json();
 }
-async function sbPatch(id, data){
-  await fetch(SUPABASE_URL+'/rest/v1/orders?id=eq.'+id, {
-    method:'PATCH',
+async function sbPatch(id,data){
+  await fetch(SUPABASE_URL+'/rest/v1/orders?id=eq.'+id,{method:'PATCH',
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-    body:JSON.stringify(data)
-  });
+    body:JSON.stringify(data)});
 }
+function fmtTime(d){return new Date(d).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
+function minutesAgo(d){const m=Math.floor((Date.now()-new Date(d).getTime())/60000);return m<1?'az önce':m+' dk önce';}
 
-function fmtTime(d){ return new Date(d).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
-function minutesAgo(d){
-  const m=Math.floor((Date.now()-new Date(d).getTime())/60000);
-  return m<1?'az önce':m+' dk önce';
-}
-
-let orders = [];
-let lastCount = -1;
+let orders=[];
 
 async function loadOrders(){
   try{
-    const rows = await sbGet('orders?durum=in.(bekliyor,hazirlaniyor,hazir)&select=*,order_items(*)&order=olusturma_zamani.asc');
-    if(rows && !rows.error){
-      // Yeni sipariş geldiyse sesi çal
-      if(lastCount >= 0 && rows.length > lastCount){
-        try{ new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA...').play(); }catch(e){}
-      }
-      lastCount = rows.length;
-      orders = rows;
-      renderKitchen();
-      document.getElementById('baglanti').textContent = '● Bağlı';
-      document.getElementById('baglanti').style.color = '#5C7A4F';
-    }
-  } catch(e){
-    document.getElementById('baglanti').textContent = '● Bağlantı sorunu';
-    document.getElementById('baglanti').style.color = '#A33A2D';
-  }
+    const rows=await sbGet('orders?durum=in.(bekliyor,hazirlaniyor,hazir)&select=*,order_items(*)&order=olusturma_zamani.asc');
+    if(rows&&!rows.error){orders=rows;renderKitchen();}
+  }catch(e){console.error(e);}
 }
 
 function renderKitchen(){
-  const waiting = orders.filter(o=>o.durum==='bekliyor');
-  const cooking = orders.filter(o=>o.durum==='hazirlaniyor');
-  const ready   = orders.filter(o=>o.durum==='hazir');
-  document.getElementById('cnt-waiting').textContent = waiting.length;
-  document.getElementById('cnt-cooking').textContent = cooking.length;
-  document.getElementById('cnt-ready').textContent   = ready.length;
-  fillCol('col-waiting', waiting, 'waiting');
-  fillCol('col-cooking', cooking, 'cooking');
-  fillCol('col-ready',   ready,   'ready');
+  const w=orders.filter(o=>o.durum==='bekliyor');
+  const c=orders.filter(o=>o.durum==='hazirlaniyor');
+  const r=orders.filter(o=>o.durum==='hazir');
+  document.getElementById('cnt-waiting').textContent=w.length;
+  document.getElementById('cnt-cooking').textContent=c.length;
+  document.getElementById('cnt-ready').textContent=r.length;
+  fillCol('col-waiting',w,'waiting');
+  fillCol('col-cooking',c,'cooking');
+  fillCol('col-ready',r,'ready');
 }
 
-function fillCol(elId, list, status){
-  const el = document.getElementById(elId);
-  if(list.length===0){ el.innerHTML='<div class="empty-col">Sipariş yok</div>'; return; }
-  el.innerHTML = list.map(o=>{
-    const items = (o.order_items||[]).map(i=>'<b>'+i.adet+'×</b> '+i.urun_adi+' <span class="oc-item-mins">~'+i.hazirlama_dk+' dk</span>').join('<br>');
-    let actions = '';
-    if(status==='waiting') actions='<button class="oc-btn start" onclick="advance(\''+o.id+'\',\'hazirlaniyor\')">Hazırlamaya başla</button>';
-    else if(status==='cooking') actions='<button class="oc-btn done" onclick="advance(\''+o.id+'\',\'hazir\')">Hazır, garson alsın</button>';
-    else actions='<button class="oc-btn serve" onclick="advance(\''+o.id+'\',\'teslim\')">Garson masaya götürdü</button>';
-    return '<div class="order-card '+status+'">'+
-      '<div class="oc-top"><span class="oc-num">'+o.siparis_no+'</span><span class="oc-table">Masa '+o.masa_no+'</span></div>'+
-      '<div class="oc-time">'+fmtTime(o.olusturma_zamani)+' · '+minutesAgo(o.olusturma_zamani)+'</div>'+
-      '<div class="oc-items">'+items+'</div>'+
-      (o.musteri_notu?'<div class="oc-note">Not: '+o.musteri_notu+'</div>':'')+
-      '<div class="oc-actions">'+actions+'</div>'+
-      '</div>';
+function fillCol(elId,list,status){
+  const el=document.getElementById(elId);
+  if(list.length===0){el.innerHTML='<div class="empty-col">Sipariş yok</div>';return;}
+  el.innerHTML=list.map(o=>{
+    const items=(o.order_items||[]).map(i=>'<b>'+i.adet+'×</b> '+i.urun_adi).join('<br>');
+    let btn='';
+    if(status==='waiting') btn='<button class="oc-btn start" onclick="advance(\''+o.id+'\',\'hazirlaniyor\')">Hazırlamaya başla</button>';
+    else if(status==='cooking') btn='<button class="oc-btn done" onclick="advance(\''+o.id+'\',\'hazir\')">Hazır, garson alsın</button>';
+    else btn='<button class="oc-btn serve" onclick="advance(\''+o.id+'\',\'teslim\')">Garson masaya götürdü</button>';
+    return '<div class="order-card '+status+'">'
+      +'<div class="oc-top"><span class="oc-num">'+o.siparis_no+'</span><span class="oc-table">Masa '+o.masa_no+'</span></div>'
+      +'<div class="oc-time">'+fmtTime(o.olusturma_zamani)+' · '+minutesAgo(o.olusturma_zamani)+'</div>'
+      +'<div class="oc-items">'+items+'</div>'
+      +(o.musteri_notu?'<div class="oc-note">Not: '+o.musteri_notu+'</div>':'')
+      +'<div class="oc-actions">'+btn+'</div>'
+      +'</div>';
   }).join('');
 }
 
-async function advance(id, yeniDurum){
-  await sbPatch(id, {durum: yeniDurum});
-  await loadOrders();
-}
+async function advance(id,yeniDurum){await sbPatch(id,{durum:yeniDurum});await loadOrders();}
 
-// Realtime - Supabase yeni format
-function baglanRealtime(){
-  try{
-    const ws = new WebSocket(
-      'wss://rbrevmufcztzrfxxkcvv.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ&vsn=1.0.0'
-    );
-    ws.onopen = ()=>{
-      ws.send(JSON.stringify({
-        topic: 'realtime:public:orders',
-        event: 'phx_join',
-        payload: { config: { broadcast: { self: false }, presence: { key: '' } } },
-        ref: '1'
-      }));
-    };
-    ws.onmessage = (e)=>{
-      try{
-        const msg = JSON.parse(e.data);
-        if(msg.event==='phx_reply' && msg.payload && msg.payload.status==='ok'){
-          document.getElementById('baglanti').textContent = '● Canlı bağlı';
-          document.getElementById('baglanti').style.color = '#5C7A4F';
-        }
-        if(['INSERT','UPDATE','DELETE'].includes(msg.event)){ loadOrders(); }
-        // Yeni format
-        if(msg.event==='postgres_changes'){ loadOrders(); }
-      }catch(e){}
-    };
-    ws.onclose = ()=>{
-      document.getElementById('baglanti').textContent = '● Yeniden bağlanıyor...';
-      document.getElementById('baglanti').style.color = '#C99A3E';
-      setTimeout(baglanRealtime, 3000);
-    };
-    ws.onerror = ()=>{ ws.close(); };
-    // Heartbeat - bağlantı kopmasm diye
-    setInterval(()=>{ if(ws.readyState===1) ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'})); }, 20000);
-  } catch(e){ setTimeout(baglanRealtime, 5000); }
-}
-
-// Saat
-setInterval(()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString('tr-TR'); },1000);
-document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR');
-
-// 5 saniyede bir yenile (realtime yedek olarak)
-setInterval(loadOrders, 5000);
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('tr-TR');},1000);
+document.getElementById('clock').textContent=new Date().toLocaleTimeString('tr-TR');
+setInterval(loadOrders,4000);
 loadOrders();
-baglanRealtime();
 </script>
 </body>
 </html>

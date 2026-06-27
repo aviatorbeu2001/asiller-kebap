@@ -594,55 +594,36 @@
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   }
 </style>
-<style>
-  .demo-bar{ display:none; }
-  .screen{ display:none; min-height:100vh; }
-  .screen.active{ display:block; }
-</style>
+<style>.demo-bar{display:none;}.screen{display:none;min-height:100vh;}.screen.active{display:block;}</style>
 </head>
 <body>
-
 <div class="screen active" id="screen-musteri">
   <div class="phone-wrap">
     <div id="view-menu">
       <div class="menu-header">
         <div class="table-tag" id="masaTag">MASA —</div>
-        <h1 class="font-display">Asiller Kebap</h1>
-        <p>Sipariş vermek için ürün seç, siparişe ekle.</p>
-      </div>
-      <div class="cat-tabs-wrap">
-        <div class="cat-tabs" id="catTabs"></div>
-        <div class="cat-tabs-fade"></div>
-      </div>
+        <h1 class="font-display">Asiller Kebap <span style="font-size:11px;color:#a89880;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;">Test aşamasındadır</span></h1>
+    </div>
+      <div class="cat-tabs-wrap"><div class="cat-tabs" id="catTabs"></div><div class="cat-tabs-fade"></div></div>
       <div class="menu-body" id="menuBody"></div>
     </div>
     <div class="cart-bar hidden" id="cartBar" onclick="openCart()">
-      <div class="cart-left">
-        <div class="cart-count" id="cartCount">0</div>
-        <span class="label">Siparişi gör</span>
-      </div>
+      <div class="cart-left"><div class="cart-count" id="cartCount">0</div><span class="label">Siparişi gör</span></div>
       <span class="total" id="cartTotal">0 ₺</span>
     </div>
   </div>
 </div>
-
 <div class="overlay" id="cartOverlay">
   <div class="sheet">
-    <div class="sheet-head">
-      <h2>Siparişin</h2>
-      <button class="sheet-close" onclick="closeOverlay('cartOverlay')">✕</button>
-    </div>
+    <div class="sheet-head"><h2>Siparişin</h2><button class="sheet-close" onclick="closeOverlay('cartOverlay')">✕</button></div>
     <div class="sheet-body">
       <div id="cartLines"></div>
       <textarea class="note-box" id="orderNote" rows="2" placeholder="Not ekle (örn. acısız olsun, su soğuk olsun...)"></textarea>
       <div class="total-row"><span>Toplam</span><span id="cartTotal2">0 ₺</span></div>
     </div>
-    <div class="sheet-foot">
-      <button class="pay-btn" id="goCheckoutBtn" onclick="confirmOrder()">Siparişi onayla</button>
-    </div>
+    <div class="sheet-foot"><button class="pay-btn" id="goCheckoutBtn" onclick="confirmOrder()">Siparişi onayla</button></div>
   </div>
 </div>
-
 <div class="screen" id="screen-confirm">
   <div class="phone-wrap">
     <div class="confirm-wrap">
@@ -651,18 +632,12 @@
       <div class="order-num" id="confirmOrderNum">—</div>
       <h2>Siparişin mutfağa düştü</h2>
       <p>Siparişin alındı. Hazır olduğunda siparişiniz masanıza getirilecektir.</p>
-      <div class="eta-badge" id="confirmEta">Hesaplanıyor...</div>
-      <div class="status-track">
-        <div class="status-dot on"></div><div class="status-line"></div>
-        <div class="status-dot"></div><div class="status-line"></div>
-        <div class="status-dot"></div>
-      </div>
+      <div class="status-track"><div class="status-dot on"></div><div class="status-line"></div><div class="status-dot"></div><div class="status-line"></div><div class="status-dot"></div></div>
       <div class="status-text">Mutfak siparişi aldı</div>
       <button class="back-to-menu" onclick="backToMenu()">Menüyü geri dön / yeni sipariş</button>
     </div>
   </div>
 </div>
-
 <script>
 const SUPABASE_URL = 'https://rbrevmufcztzrfxxkcvv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ';
@@ -816,148 +791,83 @@ const ITEM_MINS_OVERRIDE = {
   "kunefe-kaymakli": 14,
 };
 
-function itemMins(item, catName){
-  return ITEM_MINS_OVERRIDE[item.id] ?? CAT_DEFAULT_MINS[catName] ?? 15;
-}
+function itemMins(item, catName){ return ITEM_MINS_OVERRIDE[item.id] ?? CAT_DEFAULT_MINS[catName] ?? 15; }
 MENU.forEach(group=>{ group.items.forEach(item=>{ item.mins = itemMins(item, group.cat); }); });
 
 let cart = {};
 
 async function sbGet(path){
-  const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-  });
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
   return r.json();
 }
 async function sbPost(table, data){
-  const r = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json', 'Prefer': 'return=representation'
-    },
-    body: JSON.stringify(data)
-  });
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+table,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
   return r.json();
 }
 
 async function getSiparisNo(){
   const bugun = new Date().toISOString().split('T')[0];
-  const rows = await sbGet('orders?olusturma_zamani=gte.' + bugun + 'T00:00:00&select=siparis_no&order=olusturma_zamani.desc&limit=1');
-  if(!rows || rows.length === 0) return 'A-01';
-  const num = parseInt(rows[0].siparis_no.split('-')[1]) + 1;
-  return 'A-' + String(num).padStart(2,'0');
+  const rows = await sbGet('orders?olusturma_zamani=gte.'+bugun+'T00:00:00&select=siparis_no&order=olusturma_zamani.desc&limit=1');
+  if(!rows||rows.length===0) return 'A-01';
+  return 'A-'+String(parseInt(rows[0].siparis_no.split('-')[1])+1).padStart(2,'0');
 }
 
 function itemCtrlHtml(id){
-  const qty = cart[id] || 0;
-  if(qty === 0){
-    return '<button class="add-btn" onclick="changeQty(\''+id+'\',1)">Ekle</button>';
-  }
-  return '<div class="qty-ctrl">' +
-    '<button class="qty-btn" onclick="changeQty(\''+id+'\',-1)">−</button>' +
-    '<span class="qty-num">'+qty+'</span>' +
-    '<button class="qty-btn" onclick="changeQty(\''+id+'\',1)">+</button>' +
-    '</div>';
+  const qty = cart[id]||0;
+  if(qty===0) return '<button class="add-btn" onclick="changeQty(\''+id+'\',1)">Ekle</button>';
+  return '<div class="qty-ctrl"><button class="qty-btn" onclick="changeQty(\''+id+'\',-1)">−</button><span class="qty-num">'+qty+'</span><button class="qty-btn" onclick="changeQty(\''+id+'\',1)">+</button></div>';
 }
-
-function renderItemCtrl(id){
-  const el = document.getElementById('ctrl-'+id);
-  if(!el) return;
-  el.innerHTML = itemCtrlHtml(id);
-}
+function renderItemCtrl(id){ const el=document.getElementById('ctrl-'+id); if(el) el.innerHTML=itemCtrlHtml(id); }
 
 function scrollToSection(gi){
-  const section = document.getElementById('section-'+gi);
-  const bar = document.querySelector('.cat-tabs-wrap');
-  if(!section) return;
-  const barH = bar ? bar.offsetHeight : 0;
-  window.scrollTo({top: section.getBoundingClientRect().top + window.scrollY - barH - 8, behavior:'smooth'});
+  const s=document.getElementById('section-'+gi), bar=document.querySelector('.cat-tabs-wrap');
+  if(!s) return;
+  window.scrollTo({top:s.getBoundingClientRect().top+window.scrollY-(bar?bar.offsetHeight:0)-8,behavior:'smooth'});
 }
 
 function renderMenu(){
-  const tabs = document.getElementById('catTabs');
-  const body = document.getElementById('menuBody');
-  tabs.innerHTML = ''; body.innerHTML = '';
-  MENU.forEach((group, gi)=>{
-    const tab = document.createElement('button');
-    tab.className = 'cat-tab' + (gi===0?' active':'');
-    tab.textContent = group.cat;
-    tab.onclick = ()=>{
-      document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
-      scrollToSection(gi);
-    };
+  const tabs=document.getElementById('catTabs'), body=document.getElementById('menuBody');
+  tabs.innerHTML=''; body.innerHTML='';
+  MENU.forEach((group,gi)=>{
+    const tab=document.createElement('button');
+    tab.className='cat-tab'+(gi===0?' active':'');
+    tab.textContent=group.cat;
+    tab.onclick=()=>{ document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); scrollToSection(gi); };
     tabs.appendChild(tab);
-    const section = document.createElement('div');
-    section.id = 'section-' + gi;
-    const title = document.createElement('div');
-    title.className = 'cat-title';
-    title.textContent = group.cat;
+    const section=document.createElement('div'); section.id='section-'+gi;
+    const title=document.createElement('div'); title.className='cat-title'; title.textContent=group.cat;
     section.appendChild(title);
     group.items.forEach(item=>{
-      const card = document.createElement('div');
-      card.className = 'item-card';
-      card.innerHTML =
-        '<div class="item-emoji">'+item.emoji+'</div>' +
-        '<div class="item-info">' +
-          '<h3>'+item.name+'</h3>' +
-          '<p>'+item.desc+'</p>' +
-          '<div class="item-meta">' +
-            '<span class="item-price">'+item.price+' ₺</span>' +
-            '<span class="item-eta"><i class="eta-dot"></i>~'+item.mins+' dk</span>' +
-          '</div>' +
-          '<div class="item-bottom">' +
-            '<div id="ctrl-'+item.id+'">'+itemCtrlHtml(item.id)+'</div>' +
-          '</div>' +
-        '</div>';
+      const card=document.createElement('div'); card.className='item-card';
+      card.innerHTML='<div class="item-emoji">'+item.emoji+'</div><div class="item-info"><h3>'+item.name+'</h3><p>'+item.desc+'</p><div class="item-meta"><span class="item-price">'+item.price+' ₺</span></div><div class="item-bottom"><div id="ctrl-'+item.id+'">'+itemCtrlHtml(item.id)+'</div></div></div>';
       section.appendChild(card);
     });
     body.appendChild(section);
   });
 }
 
-function changeQty(id, delta){
-  cart[id] = (cart[id]||0) + delta;
-  if(cart[id]<=0) delete cart[id];
-  renderItemCtrl(id);
-  updateCartBar();
-}
-function findItem(id){
-  for(const g of MENU){ const f=g.items.find(i=>i.id===id); if(f) return f; }
-}
+function changeQty(id,delta){ cart[id]=(cart[id]||0)+delta; if(cart[id]<=0) delete cart[id]; renderItemCtrl(id); updateCartBar(); }
+function findItem(id){ for(const g of MENU){ const f=g.items.find(i=>i.id===id); if(f) return f; } }
 function cartTotalValue(){ let t=0; for(const id in cart) t+=findItem(id).price*cart[id]; return t; }
 function cartCountValue(){ let c=0; for(const id in cart) c+=cart[id]; return c; }
 
 function updateCartBar(){
-  const bar = document.getElementById('cartBar');
-  const count = cartCountValue();
-  // FIX 4: onay ekranındaysa cart bar'ı hiç gösterme
-  const confirmActive = document.getElementById('screen-confirm').classList.contains('active');
-  if(count===0 || confirmActive){ bar.classList.add('hidden'); return; }
+  const bar=document.getElementById('cartBar'), count=cartCountValue();
+  const confirmActive=document.getElementById('screen-confirm').classList.contains('active');
+  if(count===0||confirmActive){ bar.classList.add('hidden'); return; }
   bar.classList.remove('hidden');
-  document.getElementById('cartCount').textContent = count;
-  document.getElementById('cartTotal').textContent = cartTotalValue()+' ₺';
+  document.getElementById('cartCount').textContent=count;
+  document.getElementById('cartTotal').textContent=cartTotalValue()+' ₺';
 }
 
 function openCart(){
-  const lines = document.getElementById('cartLines');
-  lines.innerHTML = '';
+  const lines=document.getElementById('cartLines'); lines.innerHTML='';
   for(const id in cart){
-    const item = findItem(id);
-    const row = document.createElement('div');
-    row.className = 'cart-line';
-    row.innerHTML =
-      '<div>' +
-        '<div class="cl-name">'+item.name+'</div>' +
-        '<div class="cl-sub">'+cart[id]+' adet × '+item.price+' ₺ ' +
-          '<button class="cart-remove" onclick="removeFromCart(\''+id+'\')">kaldır</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="cl-price">'+(item.price*cart[id])+' ₺</div>';
+    const item=findItem(id), row=document.createElement('div'); row.className='cart-line';
+    row.innerHTML='<div><div class="cl-name">'+item.name+'</div><div class="cl-sub">'+cart[id]+' adet × '+item.price+' ₺ <button class="cart-remove" onclick="removeFromCart(\''+id+'\')">kaldır</button></div></div><div class="cl-price">'+(item.price*cart[id])+' ₺</div>';
     lines.appendChild(row);
   }
-  document.getElementById('cartTotal2').textContent = cartTotalValue()+' ₺';
+  document.getElementById('cartTotal2').textContent=cartTotalValue()+' ₺';
   document.getElementById('cartOverlay').classList.add('show');
 }
 function removeFromCart(id){ delete cart[id]; renderItemCtrl(id); updateCartBar(); openCart(); }
@@ -965,72 +875,32 @@ function closeOverlay(id){ document.getElementById(id).classList.remove('show');
 
 async function confirmOrder(){
   if(cartCountValue()===0) return;
-  const btn = document.getElementById('goCheckoutBtn');
+  const btn=document.getElementById('goCheckoutBtn');
   btn.disabled=true; btn.textContent='Gönderiliyor...';
   try{
-    // Aktif sipariş sayısı (yoğunluk için)
-    const aktif = await sbGet('orders?durum=in.(bekliyor,hazirlaniyor)&select=id');
-    const aktifSayi = aktif && !aktif.error ? aktif.length : 0;
-
-    const siparisNo = await getSiparisNo();
-
-    // FIX 2: items array'ini MENU'den mins değeriyle oluştur
-    const items = Object.keys(cart).map(id=>{
-      const item = findItem(id);
-      return { name: item.name, qty: cart[id], mins: item.mins, price: item.price };
-    });
-
-    // FIX 2: ETA doğru hesaplanıyor
-    const maxMins = Math.max(...items.map(i => i.mins));
-    const eta = maxMins + aktifSayi * 3;
-
-    const toplam = cartTotalValue();
-    const note = document.getElementById('orderNote').value.trim();
-
-    // Siparişi kaydet
-    const orders = await sbPost('orders', {
-      siparis_no: siparisNo,
-      masa_no: MASA_NO,
-      durum: 'bekliyor',
-      odeme: 'bekliyor',
-      toplam: toplam,
-      musteri_notu: note
-    });
-    if(!orders || orders.error || orders.length===0) throw new Error('Kayıt hatası');
-    const orderId = orders[0].id;
-
-    // Kalemleri kaydet
+    const siparisNo=await getSiparisNo();
+    const toplam=cartTotalValue();
+    const note=document.getElementById('orderNote').value.trim();
+    const orders=await sbPost('orders',{siparis_no:siparisNo,masa_no:MASA_NO,durum:'bekliyor',odeme:'bekliyor',toplam,musteri_notu:note});
+    if(!orders||orders.error||orders.length===0) throw new Error('Hata');
+    const orderId=orders[0].id;
     for(const id in cart){
-      const item = findItem(id);
-      await sbPost('order_items', {
-        order_id: orderId,
-        urun_adi: item.name,
-        adet: cart[id],
-        birim_fiyat: item.price,
-        hazirlama_dk: item.mins
-      });
+      const item=findItem(id);
+      await sbPost('order_items',{order_id:orderId,urun_adi:item.name,adet:cart[id],birim_fiyat:item.price,hazirlama_dk:item.mins});
     }
-
-    // Onay ekranı
-    document.getElementById('confirmOrderNum').textContent = siparisNo;
-    document.getElementById('confirmEta').textContent = '~'+eta+' dakika içinde hazır';
-
-    // FIX 4: Önce cart bar'ı gizle
+    document.getElementById('confirmOrderNum').textContent=siparisNo;
     document.getElementById('cartBar').classList.add('hidden');
-
+    document.getElementById('cartOverlay').classList.remove('show');
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-confirm').classList.add('active');
-    window.scrollTo({top:0, behavior:'smooth'});
-
-    // FIX 3: Sepeti ve notu temizle
-    cart = {};
-    document.getElementById('orderNote').value = '';
+    window.scrollTo({top:0,behavior:'smooth'});
+    cart={};
+    document.getElementById('orderNote').value='';
     renderMenu();
-
-  } catch(e){
+  }catch(e){
     alert('Bir hata oluştu, lütfen tekrar deneyin.');
     console.error(e);
-  } finally{
+  }finally{
     btn.disabled=false; btn.textContent='Siparişi onayla';
   }
 }
@@ -1038,7 +908,7 @@ async function confirmOrder(){
 function backToMenu(){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-musteri').classList.add('active');
-  window.scrollTo({top:0, behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 renderMenu();

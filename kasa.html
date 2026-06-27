@@ -622,13 +622,10 @@
   <div class="kitchen-wrap">
     <div class="kitchen-head">
       <div>
-        <h1 class="font-display">Kasa ekranı</h1>
+        <h1 class="font-display">Kasa ekranı <span style="font-size:11px;color:#a89880;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;">Test aşamasındadır</span></h1>
         <div class="sub">Asiller Kebap — ödemeler</div>
       </div>
-      <div style="text-align:right;">
-        <div class="clock" id="clock"></div>
-        <div id="baglanti" style="font-size:11px;margin-top:4px;color:#5C7A4F;">● Bağlanıyor...</div>
-      </div>
+      <div class="clock" id="clock"></div>
     </div>
     <div class="kanban">
       <div class="kcol waiting">
@@ -672,25 +669,19 @@
   </div>
 </div>
 
-<script>
-const SUPABASE_URL = 'https://rbrevmufcztzrfxxkcvv.supabase.co';
+<script>const SUPABASE_URL = 'https://rbrevmufcztzrfxxkcvv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ';
 
 async function sbGet(path){
-  const r = await fetch(SUPABASE_URL+'/rest/v1/'+path,{
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-  });
+  const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
   return r.json();
 }
-async function sbPatch(id, data){
-  await fetch(SUPABASE_URL+'/rest/v1/orders?id=eq.'+id,{
-    method:'PATCH',
+async function sbPatch(id,data){
+  await fetch(SUPABASE_URL+'/rest/v1/orders?id=eq.'+id,{method:'PATCH',
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-    body:JSON.stringify(data)
-  });
+    body:JSON.stringify(data)});
 }
-
-function fmtTime(d){ return new Date(d).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtTime(d){return new Date(d).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
 
 function showKasa(){
   document.getElementById('kasa-view').classList.add('active');
@@ -706,20 +697,17 @@ async function loadKasa(){
   try{
     const onDkOnce = new Date(Date.now()-10*60*1000).toISOString();
     const bugun = new Date().toISOString().split('T')[0];
-    const bekliyor = await sbGet('orders?odeme=eq.bekliyor&select=*,order_items(*)&order=olusturma_zamani.asc');
-    const odendi = await sbGet('orders?odeme=eq.odendi&odeme_saati=gte.'+onDkOnce+'&select=*,order_items(*)&order=odeme_saati.desc');
-    const tumGun = await sbGet('orders?odeme=eq.odendi&olusturma_zamani=gte.'+bugun+'T00:00:00&select=id');
+    const [bekliyor,odendi,tumGun] = await Promise.all([
+      sbGet('orders?odeme=eq.bekliyor&select=*,order_items(*)&order=olusturma_zamani.asc'),
+      sbGet('orders?odeme=eq.odendi&odeme_saati=gte.'+onDkOnce+'&select=*,order_items(*)&order=odeme_saati.desc'),
+      sbGet('orders?odeme=eq.odendi&olusturma_zamani=gte.'+bugun+'T00:00:00&select=id')
+    ]);
     if(bekliyor&&!bekliyor.error) fillKasaCol('kasa-col-bekliyor',bekliyor,false);
     if(odendi&&!odendi.error) fillKasaCol('kasa-col-odendi',odendi,true);
     document.getElementById('kasa-cnt-bekliyor').textContent=bekliyor&&!bekliyor.error?bekliyor.length:0;
     document.getElementById('kasa-cnt-odendi').textContent=odendi&&!odendi.error?odendi.length:0;
     document.getElementById('ao-badge').textContent=tumGun&&!tumGun.error?tumGun.length:0;
-    document.getElementById('baglanti').textContent='● Bağlı';
-    document.getElementById('baglanti').style.color='#5C7A4F';
-  }catch(e){
-    document.getElementById('baglanti').textContent='● Bağlantı sorunu';
-    document.getElementById('baglanti').style.color='#A33A2D';
-  }
+  }catch(e){console.error(e);}
 }
 
 function fillKasaCol(elId,list,odendi){
@@ -727,17 +715,17 @@ function fillKasaCol(elId,list,odendi){
   if(!list||list.length===0){el.innerHTML='<div class="empty-col">Sipariş yok</div>';return;}
   el.innerHTML=list.map(o=>{
     const items=(o.order_items||[]).map(i=>'<b>'+i.adet+'×</b> '+i.urun_adi).join('<br>');
-    const teslim=o.durum==='teslim'?'· <span style="color:var(--basari)">Masaya gitti</span>':'· Devam ediyor';
+    const teslim=o.durum==='teslim'?' · <span style="color:var(--basari)">Masaya gitti</span>':' · Devam ediyor';
     const btn=odendi
       ?'<button class="oc-btn serve" style="background:#3a3228;color:var(--krem-soluk);cursor:default;">✓ Ödeme alındı — '+fmtTime(o.odeme_saati)+'</button>'
       :'<button class="oc-btn done" onclick="kasaOde(\''+o.id+'\')">Odeme alındı</button>';
-    return '<div class="order-card '+(odendi?'ready':'waiting')+'">' +
-      '<div class="oc-top"><span class="oc-num">'+o.siparis_no+'</span><span class="oc-table">Masa '+o.masa_no+'</span></div>' +
-      '<div class="oc-time">'+fmtTime(o.olusturma_zamani)+' '+teslim+'</div>' +
-      '<div class="oc-items">'+items+'</div>' +
-      '<div class="oc-toplam">Toplam: <b>'+o.toplam+' ₺</b></div>' +
-      '<div class="oc-actions">'+btn+'</div>' +
-      '</div>';
+    return '<div class="order-card '+(odendi?'ready':'waiting')+'">'
+      +'<div class="oc-top"><span class="oc-num">'+o.siparis_no+'</span><span class="oc-table">Masa '+o.masa_no+'</span></div>'
+      +'<div class="oc-time">'+fmtTime(o.olusturma_zamani)+teslim+'</div>'
+      +'<div class="oc-items">'+items+'</div>'
+      +'<div class="oc-toplam">Toplam: <b>'+o.toplam+' ₺</b></div>'
+      +'<div class="oc-actions">'+btn+'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -759,31 +747,21 @@ async function renderOdemeler(){
     return;
   }
   liste.innerHTML='<div class="ao-grid">'+rows.map(o=>{
-    const items=(o.order_items||[]).map(i=>'<b>'+i.adet+'×</b> '+i.urun_adi+' <span style="color:rgba(200,185,154,.45)">— '+(i.birim_fiyat*i.adet).toLocaleString('tr-TR')+' ₺</span>').join('<br>');
-    return '<div class="ao-card">' +
-      '<div class="ao-card-head">' +
-        '<div><div class="ao-num">'+o.siparis_no+'</div><div class="ao-masa">Masa '+o.masa_no+'</div></div>' +
-        '<div class="ao-meta"><div class="ao-saat" style="font-size:14px;font-weight:600;color:var(--krem);">'+fmtTime(o.odeme_saati)+'</div><div class="ao-saat">Sipariş: '+fmtTime(o.olusturma_zamani)+'</div></div>' +
-      '</div>' +
-      '<div class="ao-urunler">'+items+'</div>' +
-      (o.musteri_notu?'<div class="ao-not">Not: '+o.musteri_notu+'</div>':'')+
-      '<div class="ao-tutar-row"><span style="font-size:12px;color:var(--krem-soluk);">Ödenen tutar</span><span class="ao-tutar">'+o.toplam.toLocaleString('tr-TR')+' ₺</span></div>' +
-      '</div>';
+    const items=(o.order_items||[]).map(i=>'<b>'+i.adet+'×</b> '+i.urun_adi+' <span style="color:rgba(200,185,154,.4)">— '+(i.birim_fiyat*i.adet).toLocaleString('tr-TR')+' ₺</span>').join('<br>');
+    return '<div class="ao-card">'
+      +'<div class="ao-card-head">'
+        +'<div><div class="ao-num">'+o.siparis_no+'</div><div class="ao-masa">Masa '+o.masa_no+'</div></div>'
+        +'<div class="ao-meta"><div class="ao-saat" style="font-size:14px;font-weight:600;color:var(--krem);">'+fmtTime(o.odeme_saati)+'</div>'
+        +'<div class="ao-saat">Sipariş: '+fmtTime(o.olusturma_zamani)+'</div></div>'
+      +'</div>'
+      +'<div class="ao-urunler">'+items+'</div>'
+      +(o.musteri_notu?'<div class="ao-not">Not: '+o.musteri_notu+'</div>':'')
+      +'<div class="ao-tutar-row"><span style="font-size:12px;color:var(--krem-soluk);">Ödenen tutar</span><span class="ao-tutar">'+o.toplam.toLocaleString('tr-TR')+' ₺</span></div>'
+      +'</div>';
   }).join('')+'</div>';
   const toplam=rows.reduce((a,o)=>a+o.toplam,0);
   document.getElementById('ao-toplam').textContent=toplam.toLocaleString('tr-TR')+' ₺';
   document.getElementById('ao-mini-toplam').textContent='Toplam: '+toplam.toLocaleString('tr-TR')+' ₺';
-}
-
-function baglanRealtime(){
-  try{
-    const ws=new WebSocket('wss://rbrevmufcztzrfxxkcvv.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicmV2bXVmY3p0enJmeHhrY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQyODEsImV4cCI6MjA5ODE1MDI4MX0.kebTGEcux1iIkl0kWqLwLXazbY_90EQOcoAaX-rb8EQ&vsn=1.0.0');
-    ws.onopen=()=>{ws.send(JSON.stringify({topic:'realtime:public:orders',event:'phx_join',payload:{config:{broadcast:{self:false}}},ref:'1'}));};
-    ws.onmessage=(e)=>{try{const msg=JSON.parse(e.data);if(['INSERT','UPDATE','DELETE','postgres_changes'].includes(msg.event)){loadKasa();}}catch(e){}};
-    ws.onclose=()=>{setTimeout(baglanRealtime,3000);};
-    ws.onerror=()=>{ws.close();};
-    setInterval(()=>{if(ws.readyState===1)ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'}));},20000);
-  }catch(e){setTimeout(baglanRealtime,5000);}
 }
 
 function tickClock(){
@@ -793,9 +771,8 @@ function tickClock(){
   if(c2) c2.textContent=s;
 }
 setInterval(tickClock,1000); tickClock();
-setInterval(loadKasa,5000);
+setInterval(loadKasa,4000);
 loadKasa();
-baglanRealtime();
 </script>
 </body>
 </html>
